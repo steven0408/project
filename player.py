@@ -8,20 +8,21 @@ class player:
         self.valid_moves = [[i, j] for i in range(8) for j in range(8)]
         self.root = node()
         self.current_node = self.root
+        self.player = 1
     
     def move(self, board, last_step, player):
+        self.player = player
         if not last_step:
             self.root.player = -player
             self.current_node = self.root
-            next_step = random.choice(self.valid_moves)
-            self.root_forward(next_step)
-            return self.root.move
         else:
             self.root_forward(last_step)
             self.current_node = self.root
-            next_step = random.choice(self.valid_moves)
-            self.root_forward(next_step)
-            return self.root.move
+        # next_step = random.choice(self.valid_moves)
+        next_node = self.MCTS(board, self.valid_moves, 100)
+        next_move = next_node.move
+        self.root_forward(next_step)
+        return self.root.move
         
     def root_forward(self, next_step):
         if not self.root.children:
@@ -69,7 +70,25 @@ class player:
                 current_player *= -1
         return 0
 
-    
+    def backpropagation(self, winner):
+        self.current_node.Ni += 1
+        if self.current_node.player == winner:
+            self.current_node.Wi += 1
+        if self.current_node.parent:
+            self.current_node = self.current_node.parent
+            self.backpropagation(winner)
+            
+    def MCTS(self, board, valid_moves, max_total):
+        for i in range(max_total):
+            board_cp = board.copy()
+            valid_moves_cp = valid_moves.copy()
+            self.current_node = self.root
+            self.selection(board_cp, valid_moves_cp)
+            if self.current_node.inTree():
+                self.expansion(board_cp, valid_moves_cp)
+            winner = self.simulation(board_cp, valid_moves_cp)
+            self.backpropagation(winner)
+        return self.root.find_max_score_child()
     
     
 class node:

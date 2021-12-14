@@ -56,6 +56,18 @@ class player:
             next_node = random.choice(self.current_node.children)
             self.forward(self, board, valid_moves, next_node.move, next_node.player)
             self.current_node = next_node
+            
+    def simulation(self, board, valid_moves)->int:
+        current_player = -self.current_node.player
+        while valid_moves:
+            next_step = random.choice(valid_moves)
+            self.forward(board, valid_moves, next_step, current_player)
+            if IsContinuous(board, next_step):
+                winner = current_player
+                return winner
+            else:
+                current_player *= -1
+        return 0
 
     
     

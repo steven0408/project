@@ -48,13 +48,14 @@ class player:
             self.forward(board, valid_moves, next_node.move, next_node.player)
             self.selection(board, valid_moves)
             
-    # def expansion(self):
-    #     self.current_node.expand(self.valid_moves_cp)
-    #     if self.current_node.children:
-    #         next_node = self.current_node.pick()
-    #         self.action(self.board_cp, next_node.player, next_node.get_move(), self.valid_loc_cp, self.valid_moves_cp)
-    #         self.current_node = next_node
-    #         self.current_player = -next_node.player
+    def expansion(self, board, valid_moves):
+        if not valid_moves:
+            return
+        else:
+            self.current_node.expand(valid_moves)
+            next_node = random.choice(self.current_node.children)
+            self.forward(self, board, valid_moves, next_node.move, next_node.player)
+            self.current_node = next_node
 
     
     
@@ -117,7 +118,8 @@ class node:
             return False
         
     def expand(self, valid_moves):
-        assert valid_moves, "No valid moves to expand."
+        if not valid_moves:
+            return
         for i in valid_moves:
             self.children.append(node(-self.player, i, self))
                 

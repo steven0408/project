@@ -8,20 +8,22 @@ class player:
         self.valid_moves = [[i, j] for i in range(8) for j in range(8)]
         self.root = node()
         self.current_node = self.root
-        self.player = 1
     
     def move(self, board, last_step, player):
-        self.player = player
-        if not last_step:
-            self.root.player = -player
-            self.current_node = self.root
-        else:
+        self.root = node(-player, last_step)
+        if last_step:
+            self.root = node(player)
             self.root_forward(last_step)
-            self.current_node = self.root
+        else:
+            self.root = node(-player, last_step)
+        assert (board == self.board).all(), "Board status is not synchronous."
         # next_step = random.choice(self.valid_moves)
-        next_node = self.MCTS(board, self.valid_moves, 100)
-        next_move = next_node.move
+        self.root.expand(self.valid_moves)
+        self.current_node = self.root
+        next_node = self.MCTS(board, self.valid_moves, 10000)
+        next_step = next_node.move
         self.root_forward(next_step)
+        
         return self.root.move
         
     def root_forward(self, next_step):
@@ -29,8 +31,9 @@ class player:
             self.root.expand(self.valid_moves)
         next_index = self.valid_moves.index(next_step)
         self.root = self.root.children[next_index]
-        self.root.parrent = None
-        self.board[next_step] = self.root.player
+        self.root.parent = None
+        row, col = next_step
+        self.board[row, col] = self.root.player
         self.valid_moves.remove(next_step)
 
     def forward(self, board, valid_moves, next_step, player):
@@ -55,7 +58,7 @@ class player:
         else:
             self.current_node.expand(valid_moves)
             next_node = random.choice(self.current_node.children)
-            self.forward(self, board, valid_moves, next_node.move, next_node.player)
+            self.forward(board, valid_moves, next_node.move, next_node.player)
             self.current_node = next_node
             
     def simulation(self, board, valid_moves)->int:
@@ -63,7 +66,7 @@ class player:
         while valid_moves:
             next_step = random.choice(valid_moves)
             self.forward(board, valid_moves, next_step, current_player)
-            if IsContinuous(board, next_step):
+            if go.IsContinuous(board, next_step):
                 winner = current_player
                 return winner
             else:
@@ -71,9 +74,7 @@ class player:
         return 0
 
     def backpropagation(self, winner):
-        self.current_node.Ni += 1
-        if self.current_node.player == winner:
-            self.current_node.Wi += 1
+        self.current_node.update(winner)
         if self.current_node.parent:
             self.current_node = self.current_node.parent
             self.backpropagation(winner)
@@ -92,12 +93,12 @@ class player:
     
     
 class node:
-    def __init__(self, player=1, move=None, parent=None):
+    def __init__(self, player=-1, move=None, parent=None):
         self.player = player
         self.move = move
         self.Ni = 0
         self.Wi = 0
-        self.parrent = None
+        self.parent = parent
         self.children = []
         
     def UCB(self, N, c=np.sqrt(2*np.log(2)/np.log(np.e))):

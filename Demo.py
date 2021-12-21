@@ -132,7 +132,6 @@ class Gobang:
     def ClossWindow(self, text):
         if messagebox.askokcancel("Notice", text + "\nAre you sure to close the window ?"):
             self.window.destroy()
-            mainloop()
         
 Game = Gobang()
 Game.SetWindow()

@@ -7,102 +7,57 @@ constant_c = np.sqrt(2*np.log(2)/np.log(np.e))
 
 class player:
     def __init__(self):
-        self.board = go.BuildBoard(8)
-        self.valid_moves = [[i, j] for i in range(8) for j in range(8)]
-        self.root = node()
-        self.current_node = self.root
+        self.turn = 0
     
     def move(self, board, last_step, player):
-        self.root = node(-player, last_step)
-        if last_step:
-            self.root = node(player)
-            self.root_forward(last_step)
+        if not last_step:
+            return random.choice([[3, 3], [3, 4], [4, 3], [4, 4]])
         else:
-            self.root = node(-player, last_step)
-        assert (board == self.board).all(), "Board status is not synchronous."
-        # next_step = random.choice(self.valid_moves)
-        self.root.expand(self.valid_moves)
-        self.current_node = self.root
-        next_node = self.MCTS(board, self.valid_moves, 10000)
-        next_step = next_node.move
-        self.root_forward(next_step)
+            root = Node(-player, last_step, None, board.copy(), None)
+            # next_step = random.choice(self.valid_moves)
+            next_node = self.MCTS(root, 10000)
+            return next_node.move
         
-        return self.root.move
-        
-    def root_forward(self, next_step):
-        if not self.root.children:
-            self.root.expand(self.valid_moves)
-        next_index = self.valid_moves.index(next_step)
-        self.root = self.root.children[next_index]
-        self.root.parent = None
-        row, col = next_step
-        self.board[row, col] = self.root.player
-        self.valid_moves.remove(next_step)
-
-    def forward(self, board, valid_moves, next_step, player):
-        row, col = next_step
-        assert board[row, col] == 0, "This position has another disc."
-        board[row, col] = player
-        assert next_step in valid_moves, "Next step is not in valid moves."
-        valid_moves.remove(next_step)
-        
-    def selection(self, board, valid_moves):
-        if self.current_node.isLeaf():
-            return
-        else:
-            next_node = self.current_node.find_max_UCB_child()
-            self.current_node = next_node
-            self.forward(board, valid_moves, next_node.move, next_node.player)
-            self.selection(board, valid_moves)
+    def selection(self, node):
+        current = node
+        while not current.isLeaf():
+            current = current.find_max_UCB_child()
+        assert current.isLeaf(), "Select a none leaf node!"
+        return current
             
-    def expansion(self, board, valid_moves):
-        if not valid_moves:
-            return
-        else:
-            self.current_node.expand(valid_moves)
-            next_node = random.choice(self.current_node.children)
-            self.forward(board, valid_moves, next_node.move, next_node.player)
-            self.current_node = next_node
-            
-    def simulation(self, board, valid_moves)->int:
-        current_player = -self.current_node.player
-        while valid_moves:
-            next_step = random.choice(valid_moves)
-            self.forward(board, valid_moves, next_step, current_player)
-            if go.IsContinuous(board, next_step):
-                winner = current_player
-                return winner
+    def MCTS(self, root, max_total):
+        total = 0
+        while total < max_total:
+            selected_node = self.selection(root)
+            Ni = 0
+            record = {1:0, -1:0, 0:0}
+            if go.IsContinuous(selected_node.board, selected_node.move):
+                Ni += 1
+                record[selected_node.player] += 1
+                selected_node.backpropagation(Ni, record)
             else:
-                current_player *= -1
-        return 0
-
-    def backpropagation(self, winner):
-        self.current_node.update(winner)
-        if self.current_node.parent:
-            self.current_node = self.current_node.parent
-            self.backpropagation(winner)
-            
-    def MCTS(self, board, valid_moves, max_total):
-        for i in range(max_total):
-            board_cp = board.copy()
-            valid_moves_cp = valid_moves.copy()
-            self.current_node = self.root
-            self.selection(board_cp, valid_moves_cp)
-            if self.current_node.inTree():
-                self.expansion(board_cp, valid_moves_cp)
-            winner = self.simulation(board_cp, valid_moves_cp)
-            self.backpropagation(winner)
-        return self.root.find_max_score_child()
+                selected_node.expand()
+                for j in selected_node.children:
+                    winner = j.simulation()
+                    Ni += 1
+                    record[winner] += 1
+                selected_node.backpropagation(Ni, record)
+            total += Ni
+        return root.find_max_score_child()
     
-    
-class node:
-    def __init__(self, player=-1, move=None, parent=None):
+class Node:
+    def __init__(self, player, move, parent, board, valid_moves):
+        assert move, "Move should not be None."
+        if not parent:
+            assert not valid_moves, "Root should not have valid moves."
         self.player = player
         self.move = move
         self.Ni = 0
         self.Wi = 0
         self.parent = parent
         self.children = []
+        self.board = board
+        self.valid_moves = valid_moves if parent else self.update_valid_moves(move, board, [], root=True)
         
     def UCB(self, N, c=constant_c):
         if self.Ni == 0:
@@ -140,28 +95,61 @@ class node:
                 max_score = score
         return self.children[idx]
     
+    def update(self, winner):
+        self.Ni += 1
+        if winner == self.player:
+            self.Wi += 1
+    
     def isLeaf(self):
         if not self.children:
             return True
         else:
             return False
         
-    def inTree(self):
-        if self.Ni != 0:
-            return True
+    def update_valid_moves(self, move, board, valid_moves, root=False): # update valid_moves inplace
+        x, y = move
+        assert board[x, y], "Board must be update first."
+        if root:
+            assert not valid_moves, "Root valid moves should be empty."
+            for i in np.argwhere(board != 0):
+                self.update_valid_moves(i, board, valid_moves)
+            return valid_moves
         else:
-            return False
+            for i, j in [[x-1, y-1], [x-1, y], [x-1, y+1], [x, y-1], [x, y+1], [x+1, y-1], [x+1, y], [x+1, y+1]]:
+                if 0 <= i <= 7 and 0 <= j <= 7 and board[i, j] == 0:
+                    if [i, j] not in valid_moves:
+                        valid_moves.append([i, j])
+            if [x, y] in valid_moves:
+                valid_moves.remove(move)
         
-    def expand(self, valid_moves):
-        if not valid_moves:
+    def expand(self):
+        if not self.valid_moves:
             return
-        for i in valid_moves:
-            self.children.append(node(-self.player, i, self))
+        for i in self.valid_moves:
+            board_cp = self.board.copy()
+            row, col = i
+            board_cp[row, col] = -self.player
+            valid_moves_cp = self.valid_moves.copy()
+            self.update_valid_moves(i, board_cp, valid_moves_cp)
+            self.children.append(Node(-self.player, i, self, board_cp, valid_moves_cp))
                 
-    def update(self, winner):
-        self.Ni += 1
-        if winner == self.player:
-            self.Wi += 1
-    
+    def simulation(self):
+        current_player = self.player
+        board_cp = self.board.copy()
+        valid_moves_cp = self.valid_moves.copy()
+        while valid_moves_cp:
+            current_player *= -1
+            x, y = random.choice(valid_moves_cp)
+            board_cp[x, y] = current_player
+            self.update_valid_moves([x, y], board_cp, valid_moves_cp)
+            if go.IsContinuous(board_cp, [x, y]):
+                winner = current_player
+                self.update(winner)
+                return winner
+        return 0
         
-    
+    def backpropagation(self, Ni, record):
+        self.Ni += Ni
+        self.Wi += record[self.player]
+        if self.parent:
+            self.parent.backpropagation(Ni, record)

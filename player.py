@@ -1,6 +1,9 @@
 import numpy as np
 import Gobang as go
 import random
+import multiprocessing as mp
+
+constant_c = np.sqrt(2*np.log(2)/np.log(np.e))
 
 class player:
     def __init__(self):
@@ -101,7 +104,7 @@ class node:
         self.parent = parent
         self.children = []
         
-    def UCB(self, N, c=np.sqrt(2*np.log(2)/np.log(np.e))):
+    def UCB(self, N, c=constant_c):
         if self.Ni == 0:
             return(float("inf"))
         elif N == 0:

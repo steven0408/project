@@ -15,8 +15,8 @@ class player:
         else:
             root = Node(-player, last_step, None, board.copy(), None)
             # next_step = random.choice(self.valid_moves)
-            next_node = self.MCTS(root, 10000)
-            return next_node.move
+            next_node, suggest = self.MCTS(root, len(np.argwhere(board != 0))*250) # 新增 suggest，型態是dictionary
+            return next_node.move, suggest
         
     def selection(self, node):
         current = node
@@ -43,7 +43,12 @@ class player:
                     record[winner] += 1
                 selected_node.backpropagation(Ni, record)
             total += Ni
-        return root.find_max_score_child()
+        suggest = {0:[], 1:[]} # 0: cordinates, 1: win rates
+        for i in root.children:
+            suggest[0].append(i.move)
+            suggest[1].append(i.Wi/i.Ni)
+        # print(suggest)
+        return root.find_max_score_child(), suggest
     
 class Node:
     def __init__(self, player, move, parent, board, valid_moves):

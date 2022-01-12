@@ -35,22 +35,22 @@ class Gobang:
     
     def ClearCanvas(self):
         self.canvas.delete('all')
-        for i in range(8):
-            self.canvas.create_line((i+1) * 80, 80, (i+1) * 80, 8 * 80, fill='black')
-            self.canvas.create_line(80, (i+1) * 80, 8 * 80, (i+1) * 80, fill='black') 
+        for i in range(19):
+            self.canvas.create_line((i+1) * 35, 35, (i+1) * 35, 19 * 35, fill='black')
+            self.canvas.create_line(35, (i+1) * 35, 19 * 35, (i+1) * 35, fill='black') 
         self.frame1.grid(column=0)
 
     def EventToAction(self, event):
-        x = min(int((event.x - 40)/80), 7)
-        y = min(int((event.y - 40)/80), 7)
+        x = min(int((event.x - 17)/35), 18)
+        y = min(int((event.y - 17)/35), 18)
         return [x, y]
 
     def ActionToDraw(self, action, chessman):
         x0, y0 = action
         if chessman == 1:
-            self.black_chess = self.canvas.create_oval(x0 * 80 + 50, y0 * 80 + 50, (x0+1) * 80 + 30,  (y0+1) * 80 + 30, fill='black', outline='black')  # 圓形
+            self.black_chess = self.canvas.create_oval(x0 * 35 + 18, y0 * 35 + 18, (x0+1) * 35 + 17,  (y0+1) * 35 + 17, fill='black', outline='black')  # 圓形
         else :
-            self.white_chess = self.canvas.create_oval(x0 * 80 + 50, y0 * 80 + 50, (x0+1) * 80 + 30,  (y0+1) * 80 + 30, fill='white', outline='white')
+            self.white_chess = self.canvas.create_oval(x0 * 35 + 18, y0 * 35 + 18, (x0+1) * 35 + 17,  (y0+1) * 35 + 17, fill='white', outline='white')
         self.window.update()
 
     def Run(self):
@@ -58,7 +58,7 @@ class Gobang:
         self.button4 = False
         self.droplist = []
         self.ResumeGame = False
-        self.Board = BuildBoard(8)
+        self.Board = BuildBoard(19)
         self.player1 = player.player()
         self.action = []
         self.suggest = 0
@@ -115,7 +115,7 @@ class Gobang:
                 self.tip_dict = {}
                 self.button4 = True
                 for i in range(len(self.suggest[0])):
-                    self.tip_dict[i] = self.canvas.create_text((self.suggest[0][i][0] + 1) * 80, (self.suggest[0][i][1] + 1) * 80, text=round(self.suggest[1][i], 2))
+                    self.tip_dict[i] = self.canvas.create_text((self.suggest[0][i][0] + 1) * 35, (self.suggest[0][i][1] + 1) * 35, text=round(self.suggest[1][i], 2))
                 self.window.update()
             else:
                 self.button4 = False

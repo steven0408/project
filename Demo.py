@@ -78,13 +78,14 @@ class Gobang:
         if len(self.droplist) == 0:
             self.action = self.player1.move(self.Board, self.action, self.chessman)
         else:
-            self.action, self.suggest = self.player1.move(self.Board, self.action, self.chessman)
+            self.action, _ = self.player1.move(self.Board, self.action, self.chessman)
         
         if self.action in GetValid(self.Board):
             row, col = self.action
             self.droplist.append(self.action)
             self.Board[row, col] = self.chessman
             self.ActionToDraw(self.action, self.chessman)
+            _, self.suggest = self.player1.move(self.Board, self.action, -self.chessman)
             if IsContinuous(self.Board, self.action):
                 self.Notice(True)
                 self.ClossWindow('You Lose ~ (QAQ)')
@@ -111,26 +112,15 @@ class Gobang:
     def TipProcess(self):
         if self.CurrentPlayer == 'Player2' and self.suggest != 0:
             if not self.button4 :
+                self.tip_dict = {}
                 self.button4 = True
-                self.t0 = self.canvas.create_text((self.suggest[0][0][0] + 1) * 80, (self.suggest[0][0][1] + 1) * 80, text=round(self.suggest[1][0], 2))
-                self.t1 = self.canvas.create_text((self.suggest[0][1][0] + 1) * 80, (self.suggest[0][1][1] + 1) * 80, text=round(self.suggest[1][1], 2))
-                self.t2 = self.canvas.create_text((self.suggest[0][2][0] + 1) * 80, (self.suggest[0][2][1] + 1) * 80, text=round(self.suggest[1][2], 2))
-                self.t3 = self.canvas.create_text((self.suggest[0][3][0] + 1) * 80, (self.suggest[0][3][1] + 1) * 80, text=round(self.suggest[1][3], 2))
-                self.t4 = self.canvas.create_text((self.suggest[0][4][0] + 1) * 80, (self.suggest[0][4][1] + 1) * 80, text=round(self.suggest[1][4], 2))
-                self.t5 = self.canvas.create_text((self.suggest[0][5][0] + 1) * 80, (self.suggest[0][5][1] + 1) * 80, text=round(self.suggest[1][5], 2))
-                self.t6 = self.canvas.create_text((self.suggest[0][6][0] + 1) * 80, (self.suggest[0][6][1] + 1) * 80, text=round(self.suggest[1][6], 2))
-                self.t7 = self.canvas.create_text((self.suggest[0][7][0] + 1) * 80, (self.suggest[0][7][1] + 1) * 80, text=round(self.suggest[1][7], 2))
+                for i in range(len(self.suggest[0])):
+                    self.tip_dict[i] = self.canvas.create_text((self.suggest[0][i][0] + 1) * 80, (self.suggest[0][i][1] + 1) * 80, text=round(self.suggest[1][i], 2))
                 self.window.update()
             else:
                 self.button4 = False
-                self.canvas.delete(self.t0)
-                self.canvas.delete(self.t1)
-                self.canvas.delete(self.t2)
-                self.canvas.delete(self.t3)
-                self.canvas.delete(self.t4)
-                self.canvas.delete(self.t5)
-                self.canvas.delete(self.t6)
-                self.canvas.delete(self.t7)
+                for i in range(len(self.suggest[0])):
+                    self.canvas.delete(self.tip_dict[i])
                 self.window.update()
 
     def TieProcess(self):

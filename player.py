@@ -43,12 +43,14 @@ class player:
                     record[winner] += 1
                 selected_node.backpropagation(Ni, record)
             total += Ni
+            
+        next_node = root.find_max_score_child()
         suggest = {0:[], 1:[]} # 0: cordinates, 1: win rates
         for i in root.children:
             suggest[0].append(i.move)
             suggest[1].append(i.Wi/i.Ni)
         # print(suggest)
-        return root.find_max_score_child(), suggest
+        return next_node, suggest
     
 class Node:
     def __init__(self, player, move, parent, board, valid_moves):
@@ -116,8 +118,8 @@ class Node:
         assert board[x, y], "Board must be update first."
         if root:
             assert not valid_moves, "Root valid moves should be empty."
-            for i in np.argwhere(board != 0):
-                self.update_valid_moves(i, board, valid_moves)
+            for i, j in np.argwhere(board != 0):
+                self.update_valid_moves((i, j), board, valid_moves)
             return valid_moves
         else:
             for i, j in [[x-1, y-1], [x-1, y], [x-1, y+1], [x, y-1], [x, y+1], [x+1, y-1], [x+1, y], [x+1, y+1]]:

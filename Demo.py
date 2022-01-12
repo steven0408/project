@@ -85,7 +85,6 @@ class Gobang:
             self.droplist.append(self.action)
             self.Board[row, col] = self.chessman
             self.ActionToDraw(self.action, self.chessman)
-            _, self.suggest = self.player1.move(self.Board, self.action, -self.chessman)
             if IsContinuous(self.Board, self.action):
                 self.Notice(True)
                 self.ClossWindow('You Lose ~ (QAQ)')
@@ -104,20 +103,20 @@ class Gobang:
             row, col = self.droplist.pop()
             self.Board[row, col] = 0
             self.action = self.droplist[len(self.droplist) - 1]
-
             self.canvas.delete(self.black_chess)
             self.canvas.delete(self.white_chess)
             self.window.update()
     
     def TipProcess(self):
-        if self.CurrentPlayer == 'Player2' and self.suggest != 0:
+        if self.CurrentPlayer == 'Player2' :
             if not self.button4 :
+                _, self.suggest = self.player1.move(self.Board, self.action, -self.chessman)
                 self.tip_dict = {}
                 self.button4 = True
                 for i in range(len(self.suggest[0])):
                     self.tip_dict[i] = self.canvas.create_text((self.suggest[0][i][0] + 1) * 35, (self.suggest[0][i][1] + 1) * 35, text=round(self.suggest[1][i], 2))
                 self.window.update()
-            else:
+            elif self.button4 and self.suggest != 0:
                 self.button4 = False
                 for i in range(len(self.suggest[0])):
                     self.canvas.delete(self.tip_dict[i])

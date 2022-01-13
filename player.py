@@ -11,7 +11,8 @@ class player:
     
     def move(self, board, last_step, player):
         if not last_step:
-            return random.choice([[3, 3], [3, 4], [4, 3], [4, 4]])
+            # return random.choice([[9, 9]])
+            return [9, 9]
         else:
             root = Node(-player, last_step, None, board.copy(), None)
             # next_step = random.choice(self.valid_moves)
@@ -123,7 +124,7 @@ class Node:
             return valid_moves
         else:
             for i, j in [[x-1, y-1], [x-1, y], [x-1, y+1], [x, y-1], [x, y+1], [x+1, y-1], [x+1, y], [x+1, y+1]]:
-                if 0 <= i <= 7 and 0 <= j <= 7 and board[i, j] == 0:
+                if 0 <= i <= 18 and 0 <= j <= 18 and board[i, j] == 0:
                     if [i, j] not in valid_moves:
                         valid_moves.append([i, j])
             if [x, y] in valid_moves:

@@ -110,7 +110,7 @@ class Gobang:
     def TipProcess(self):
         if self.CurrentPlayer == 'Player2' :
             if not self.button4 :
-                _, self.suggest = self.player1.move(self.Board, self.action, -self.chessman)
+                _, self.suggest = self.player1.move(self.Board, self.action, self.chessman)
                 self.tip_dict = {}
                 self.button4 = True
                 for i in range(len(self.suggest[0])):
